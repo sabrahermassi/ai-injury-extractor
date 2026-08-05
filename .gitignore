@@ -1,5 +1,16 @@
+# Environment variables
 .env
 .env.local
-node_modules
-.terraform
-terraform.tfstate
+
+# Dependencies
+node_modules/
+
+# Terraform generated directory
+.terraform/
+
+# Terraform state files (contain sensitive data)
+*.tfstate
+*.tfstate.*
+
+# Lambda build artifacts
+lambda/*.zip
