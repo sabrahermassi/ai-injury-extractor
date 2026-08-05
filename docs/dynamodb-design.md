@@ -4,7 +4,7 @@
 
 The AI Injury Extractor uses DynamoDB as the storage layer for extracted injury journal entries.
 
-The goal is to store user-provided text together with structured information extracted by the LLM (Gemini API).
+The goal is to store user-provided text together with structured information extracted by the LLM (GROQ API).
 
 The MVP focuses on:
 
@@ -125,7 +125,7 @@ Possible future additions:
 User text input
         |
         v
-Gemini API
+GROQ API
         |
         v
 Structured injury data
