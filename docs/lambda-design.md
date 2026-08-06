@@ -4,7 +4,7 @@
 
 The AI Injury Extractor uses AWS Lambda as the serverless backend processing layer.
 
-The Lambda function is responsible for receiving user injury text, sending it to the Gemini API for structured extraction, storing the result in DynamoDB, and returning a response to the client.
+The Lambda function is responsible for receiving user injury text, sending it to the Groq API for structured extraction, storing the result in DynamoDB, and returning a response to the client.
 
 ---
 
@@ -56,7 +56,7 @@ Lambda (extractInjuryEntry)
  |
  |-- Validate input
  |
- |-- Call Gemini API
+ |-- Call Groq API
  |
  |-- Parse AI response
  |
@@ -106,9 +106,9 @@ Example:
 
 ---
 
-## 3. Call Gemini API
+## 3. Call Groq API
 
-Lambda sends the user's text to Gemini with instructions to extract structured injury information.
+Lambda sends the user's text to Groq API with instructions to extract structured injury information.
 
 The LLM is responsible for converting unstructured text into structured JSON.
 
@@ -195,14 +195,14 @@ Enable application logging and debugging.
 
 ---
 
-## Gemini API Access
+## Groq API Access
 
-The Gemini API key will be provided through environment variables.
+The Groq API key will be provided through environment variables.
 
 Example:
 
-```
-GEMINI_API_KEY
+```text
+GROQ_API_KEY
 ```
 
 The key will not be stored in source code.
@@ -244,7 +244,7 @@ API Gateway
     ↓
 AWS Lambda
     |
-    ├── Gemini API
+    ├── Groq API
     |
     ↓
 DynamoDB

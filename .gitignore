@@ -1,5 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables
 .env
 .env.local
-node_modules
-.terraform
-terraform.tfstate
+
+# Dependencies
+node_modules/
+
+# Terraform generated directory
+.terraform/
+
+# Terraform state files (contain sensitive data)
+*.tfstate
+*.tfstate.*
+
+# Terraform variables (may contain secrets)
+terraform.tfvars
+
+# Lambda build artifacts
+lambda/*.zip
+lambda/package/
+
+# Continue configs
+.continue
