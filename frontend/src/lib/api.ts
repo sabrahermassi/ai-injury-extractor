@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function extractInjury(text: string) {
+export async function extractInjury(text: string): Promise<InjuryExtraction> {
   if (!API_URL) {
     throw new Error("NEXT_PUBLIC_API_URL is not configured");
   }
@@ -16,8 +16,17 @@ export async function extractInjury(text: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to extract injury");
+    const error = await response.json();
+    throw new Error(error.message || "Failed to extract injury");
   }
 
-  return response.json();
+  const data = await response.json();
+
+  return {
+    injuryName: data.injury_name,
+    bodyArea: data.body_area,
+    painLevel: data.pain_level,
+    symptoms: data.symptoms,
+    possibleCauses: data.possible_causes,
+  };
 }

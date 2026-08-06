@@ -1,72 +1,27 @@
-"use client";
-
-import { useState } from "react";
-import { extractInjury } from "@/lib/api";
+import { Stethoscope } from "lucide-react";
+import { InjuryExtractor } from "@/components/injury-extractor";
 
 export default function Home() {
-  const [text, setText] = useState("");
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit() {
-    if (loading || !text.trim()) return;
-    setLoading(true);
-    setResult(null);
-    setError(null);
-
-    try {
-      const data = await extractInjury(text);
-      setResult(data);
-    } catch {
-      setError("The injury analysis failed. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <main className="min-h-screen p-10">
-      <h1 className="text-3xl font-bold mb-6">AI Injury Extractor</h1>
+    <main className="mx-auto flex min-h-svh w-full max-w-2xl flex-col gap-8 px-4 py-10 sm:py-16">
+      <header className="flex flex-col gap-4">
+        <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Stethoscope className="size-6" aria-hidden="true" />
+        </div>
 
-      <textarea
-        className="border p-3 w-full max-w-xl h-40"
-        placeholder="Describe your injury..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            AI Injury Extractor
+          </h1>
 
-      <br />
-
-      {error && <p role="alert">{error}</p>}
-
-      <button
-        className="mt-4 px-5 py-2 bg-black text-white rounded"
-        onClick={handleSubmit}
-        disabled={loading || !text.trim()}
-      >
-        {loading ? "Analyzing..." : "Analyze"}
-      </button>
-
-      {result && (
-        <div className="mt-8 border p-5 max-w-xl">
-          <h2 className="font-bold text-xl">Result</h2>
-
-          <p>Injury: {result.injury_name}</p>
-
-          <p>Body area: {result.body_area}</p>
-
-          <p>
-            Symptoms:
-            {result.symptoms?.join(", ")}
-          </p>
-
-          <p>
-            Possible causes:
-            {result.possible_causes?.join(", ")}
+          <p className="text-muted-foreground leading-relaxed">
+            Describe an injury in your own words and get a clean, structured
+            breakdown of the condition, symptoms, and likely causes.
           </p>
         </div>
-      )}
+      </header>
+
+      <InjuryExtractor />
     </main>
   );
 }
