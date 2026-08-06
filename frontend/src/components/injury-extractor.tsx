@@ -34,8 +34,12 @@ export function InjuryExtractor() {
     try {
       const data = await extractInjury(description);
       setResult(data);
-    } catch {
-      setError("Analysis failed. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Analysis failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -84,7 +88,7 @@ export function InjuryExtractor() {
             <p className="text-sm text-muted-foreground">
               Example: "{EXAMPLE}" · Press{" "}
               <kbd className="rounded bg-muted px-1 font-mono text-[0.7rem]">
-                Ctrl
+                Ctrl / Cmd
               </kbd>{" "}
               +{" "}
               <kbd className="rounded bg-muted px-1 font-mono text-[0.7rem]">

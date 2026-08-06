@@ -17,7 +17,7 @@ export async function extractInjury(text: string): Promise<InjuryExtraction> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Failed to extract injury");
+    throw new Error(error.error || "Failed to extract injury");
   }
 
   const data = await response.json();

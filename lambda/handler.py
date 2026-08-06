@@ -92,10 +92,10 @@ Schema:
 }}
 
 Rules:
-- Extract pain level as a number if it is mentioned.
-- If pain level is not mentioned, return null.
-- Keep symptoms as an array of strings.
-- Keep possible causes as an array of strings.
+- pain_level must be a number between 0 and 10 when the user mentions pain intensity.
+- If the user does not mention a pain level, return null.
+- symptoms must be an array of strings.
+- possible_causes must be an array of strings.
 
 Injury description:
 
