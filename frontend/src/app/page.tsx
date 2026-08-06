@@ -7,18 +7,22 @@ export default function Home() {
   const [text, setText] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
+    if (loading || !text.trim()) return;
     setLoading(true);
+    setResult(null);
+    setError(null);
 
     try {
       const data = await extractInjury(text);
       setResult(data);
-    } catch (error) {
-      console.error(error);
+    } catch {
+      setError("The injury analysis failed. Try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
@@ -34,9 +38,12 @@ export default function Home() {
 
       <br />
 
+      {error && <p role="alert">{error}</p>}
+
       <button
         className="mt-4 px-5 py-2 bg-black text-white rounded"
         onClick={handleSubmit}
+        disabled={loading || !text.trim()}
       >
         {loading ? "Analyzing..." : "Analyze"}
       </button>

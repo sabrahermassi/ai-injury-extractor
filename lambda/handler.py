@@ -25,11 +25,23 @@ def lambda_handler(event, context):
     print("Lambda started")
 
     try:
-        body = json.loads(event["body"])
-
+        raw_body = event.get("body") if isinstance(event, dict) else None
+        try:
+            body = json.loads(raw_body) if isinstance(raw_body, str) else None
+        except json.JSONDecodeError:
+            body = None
+        if (
+            not isinstance(body, dict)
+            or not isinstance(body.get("text"), str)
+            or not body["text"].strip()
+        ):
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "Invalid request body"}),
+            }
         injury_text = body["text"]
 
-        print("Received text:", injury_text)
+        print("Processing injury extraction request")
 
 
         # Call GROQ
@@ -73,7 +85,7 @@ Injury description:
             response.choices[0].message.content
         )
 
-        print("Extracted data:", extracted_data)
+        print("Extraction completed")
 
 
         # Prepare DynamoDB item
@@ -88,7 +100,7 @@ Injury description:
         }
 
 
-        print("Saving item:", item)
+        print("Saving item to DynamoDB")
 
 
         # Save to DynamoDB
@@ -97,10 +109,7 @@ Injury description:
         )
 
 
-        print(
-            "DynamoDB response:",
-            dynamodb_response
-        )
+        print("DynamoDB save completed")
 
 
         return {

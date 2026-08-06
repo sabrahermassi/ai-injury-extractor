@@ -8,6 +8,8 @@ resource "aws_lambda_function" "injury_extractor" {
   handler = "handler.lambda_handler"
   runtime = "python3.12"
 
+  timeout = 20
+
   role = aws_iam_role.lambda_role.arn
 
   environment {

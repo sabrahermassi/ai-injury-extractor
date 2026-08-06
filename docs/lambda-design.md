@@ -108,7 +108,7 @@ Example:
 
 ## 3. Call Groq API
 
-Lambda sends the user's text to Groq ini with instructions to extract structured injury information.
+Lambda sends the user's text to Groq API with instructions to extract structured injury information.
 
 The LLM is responsible for converting unstructured text into structured JSON.
 
@@ -201,7 +201,7 @@ The Groq API key will be provided through environment variables.
 
 Example:
 
-```
+```text
 GROQ_API_KEY
 ```
 

@@ -39,19 +39,24 @@ Groq LLM
 DynamoDB
 ```
 
-## Running locally
+## Install Lambda dependencies
 
-```bash
-pip install -r requirements.txt
-```
+From the Lambda directory:
+
+````bash
+cd lambda
+pip install -r requirements.txt -t package
 
 ## Deploy Lambda
 
 ```powershell
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
-```
+````
 
-## Test the API
+## Test the API (Development only)
+
+> This endpoint is currently unauthenticated and intended for development/testing.
+> Authentication, authorization, and rate limiting will be added before production deployment.
 
 ```bash
 curl -X POST \
@@ -142,19 +147,11 @@ cat response.json
 
 ---
 
-## Scan DynamoDB table
+## Scan DynamoDB table (development only)
 
 ```bash
 aws dynamodb scan \
---table-name injury-extractor
-```
-
----
-
-## Delete all items (development only)
-
-```bash
-aws dynamodb scan --table-name injury-extractor
+--table-name InjuryEntries
 ```
 
 ---
@@ -167,14 +164,6 @@ PowerShell
 Remove-Item function.zip -ErrorAction Ignore
 
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
-```
-
----
-
-## Install Lambda dependencies
-
-```bash
-pip install openai -t package
 ```
 
 ---
@@ -230,14 +219,3 @@ Verify the endpoint URL and deployment stage.
 ### API Gateway returns 404
 
 Confirm the `/extract` resource and `POST` method are deployed.
-
-## Roadmap
-
-- [x] Lambda function
-- [x] API Gateway
-- [x] Groq integration
-- [ ] Save results to DynamoDB
-- [ ] Next.js frontend
-- [ ] Injury history dashboard
-- [ ] Authentication
-- [ ] Deployment to Vercel
