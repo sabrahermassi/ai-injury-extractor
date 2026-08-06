@@ -67,7 +67,10 @@ def lambda_handler(event, context):
             messages=[
                 {
                     "role": "system",
-                    "content": "You extract structured information from injury descriptions. Return JSON only."
+                    "content": (
+                        "You extract structured information from injury descriptions. "
+                        "Return JSON only."
+                    )
                 },
                 {
                     "role": "user",
@@ -83,9 +86,16 @@ Schema:
 {{
     "injury_name": "",
     "body_area": "",
+    "pain_level": null,
     "symptoms": [],
     "possible_causes": []
 }}
+
+Rules:
+- Extract pain level as a number if it is mentioned.
+- If pain level is not mentioned, return null.
+- Keep symptoms as an array of strings.
+- Keep possible causes as an array of strings.
 
 Injury description:
 
@@ -142,7 +152,7 @@ Injury description:
 
 
         # Save to DynamoDB
-        dynamodb_response = table.put_item(
+        table.put_item(
             Item=item
         )
 
