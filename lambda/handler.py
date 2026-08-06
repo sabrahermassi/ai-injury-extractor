@@ -105,6 +105,11 @@ Injury description:
 
         return {
             "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Allow-Methods": "OPTIONS,POST"
+            },
             "body": json.dumps(extracted_data)
         }
 
@@ -115,7 +120,10 @@ Injury description:
 
         return {
             "statusCode": 500,
-            "body": json.dumps({
-                "error": str(e)
-            })
+            "headers": {
+                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Allow-Methods": "OPTIONS,POST"
+            },
+            "body": json.dumps({"error": str(e)})
         }
