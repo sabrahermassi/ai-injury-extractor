@@ -33,6 +33,14 @@
 
 ---
 
+## AI Model Reliability (Before Production)
+
+- [ ] Review and update Groq model selection
+  - Replace deprecated models (e.g., `llama-3.1-8b-instant`) before retirement
+  - Move model configuration to environment variables instead of hardcoding
+  - Validate LLM responses against the expected JSON schema
+  - Handle model/API failures gracefully
+
 # Future Improvements
 
 ## Security Hardening (Before Production)
@@ -57,6 +65,42 @@
 - [ ] Add Lambda code signing
   - Configure AWS Signer and Lambda code signing configuration
   - Ensure only trusted deployment artifacts can be executed
+
+## Data Model Improvements (Before Production)
+
+- [ ] Replace hardcoded user identity
+  - Remove the hardcoded `userId = "test-user-001"` value in Lambda
+  - Use the authenticated user's ID from JWT claims (e.g., Amazon Cognito or another identity provider)
+  - Ensure each user can only access and create their own injury records
+
+- [ ] Improve DynamoDB record uniqueness
+  - Replace the timestamp-only sort key strategy with a unique injury entry identifier
+  - Use `entryId` as part of the DynamoDB key design to prevent accidental overwrites
+  - Add idempotency protection to prevent duplicate records from retried requests
+
+- [ ] Improve Lambda deployment process
+  - Build Lambda packages inside a Lambda-compatible Linux environment
+  - Use Docker or CI/CD build pipeline for reproducible artifacts
+
+- [ ] Improve Lambda error handling
+  - Catch Groq API failures separately (timeouts, connection errors, rate limits)
+  - Return appropriate HTTP status codes (502/503 instead of always returning 500)
+  - Avoid exposing internal exception details in API responses
+  - Add sanitized error messages for frontend handling
+
+### AI Extraction Improvements
+
+- [ ] Align Lambda output with the full injury schema defined in `docs/lambda-design.md`
+  - Add additional fields:
+    - injury name
+    - body area
+    - side
+    - cause
+    - description
+    - status
+    - structured symptoms
+  - Validate AI responses against the expected schema
+  - Evaluate Groq structured outputs / JSON schema support
 
 ---
 

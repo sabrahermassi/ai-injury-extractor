@@ -23,6 +23,23 @@ A serverless AI-powered application that transforms free-text injury description
 
 ## Architecture
 
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API Gateway
+  participant Injury Extractor Lambda
+  participant Groq API
+  participant InjuryEntries DynamoDB
+
+  Client->>API Gateway: POST /extract with injury text
+  API Gateway->>Injury Extractor Lambda: Proxy request
+  Injury Extractor Lambda->>Groq API: Structured extraction request
+  Groq API-->>Injury Extractor Lambda: Injury JSON
+  Injury Extractor Lambda->>InjuryEntries DynamoDB: Store injury item
+  Injury Extractor Lambda-->>API Gateway: HTTP 200 response
+  API Gateway-->>Client: Extraction result
+```
+
 ```
 Next.js
     │
@@ -43,15 +60,16 @@ DynamoDB
 
 From the Lambda directory:
 
-````bash
+```bash
 cd lambda
 pip install -r requirements.txt -t package
+```
 
 ## Deploy Lambda
 
 ```powershell
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
-````
+```
 
 ## Test the API (Development only)
 
@@ -74,7 +92,7 @@ curl https://api.groq.com/openai/v1/chat/completions \
 -H "Authorization: Bearer YOUR_GROQ_API_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-  "model": "llama-3.3-70b-versatile",
+  "model": "llama-3.1-8b-instant",
   "messages": [
     {
       "role": "user",
@@ -112,7 +130,7 @@ aws lambda update-function-code \
 ```bash
 aws lambda update-function-configuration \
 --function-name injury-extractor \
---environment "Variables={GROQ_API_KEY=YOUR_KEY,TABLE_NAME=injury-extractor}"
+--environment "Variables={GROQ_API_KEY=YOUR_KEY,DYNAMODB_TABLE=InjuryEntries}"
 ```
 
 ---
@@ -139,7 +157,7 @@ aws logs tail /aws/lambda/injury-extractor --follow
 ```bash
 aws lambda invoke \
 --function-name injury-extractor \
---payload '{"text":"I have hip pain"}' \
+--payload '{"body":"{\"text\":\"I have hip pain\"}"}' \
 response.json
 
 cat response.json

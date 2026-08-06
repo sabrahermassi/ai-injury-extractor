@@ -6,6 +6,16 @@ import uuid
 from groq import Groq
 
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "http://localhost:3000",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "OPTIONS,POST"
+}
+
+
+MAX_TEXT_LENGTH = 5000
+
+
 # DynamoDB setup
 dynamodb = boto3.resource("dynamodb")
 
@@ -16,7 +26,9 @@ table = dynamodb.Table(
 
 # GROQ setup
 client = Groq(
-    api_key=os.environ["GROQ_API_KEY"]
+    api_key=os.environ["GROQ_API_KEY"],
+    timeout=15.0,
+    max_retries=0
 )
 
 
@@ -34,9 +46,11 @@ def lambda_handler(event, context):
             not isinstance(body, dict)
             or not isinstance(body.get("text"), str)
             or not body["text"].strip()
+            or len(body["text"]) > MAX_TEXT_LENGTH
         ):
             return {
                 "statusCode": 400,
+                "headers": CORS_HEADERS,,
                 "body": json.dumps({"error": "Invalid request body"}),
             }
         injury_text = body["text"]
@@ -77,6 +91,7 @@ Injury description:
                 }
             ],
             temperature=0
+            max_tokens=500
         )
 
 
@@ -84,6 +99,22 @@ Injury description:
         extracted_data = json.loads(
             response.choices[0].message.content
         )
+
+        required_fields = [
+            "injury_name",
+            "body_area",
+            "symptoms",
+            "possible_causes"
+        ]
+
+        if not all(field in extracted_data for field in required_fields):
+            return {
+                "statusCode": 502,
+                "headers": CORS_HEADERS,
+                "body": json.dumps({
+                    "error": "Invalid AI response format"
+            })
+        }
 
         print("Extraction completed")
 
@@ -114,11 +145,7 @@ Injury description:
 
         return {
             "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "http://localhost:3000",
-                "Access-Control-Allow-Headers": "Content-Type",
-                "Access-Control-Allow-Methods": "OPTIONS,POST"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps(extracted_data)
         }
 
@@ -129,10 +156,6 @@ Injury description:
 
         return {
             "statusCode": 500,
-            "headers": {
-                "Access-Control-Allow-Origin": "http://localhost:3000",
-                "Access-Control-Allow-Headers": "Content-Type",
-                "Access-Control-Allow-Methods": "OPTIONS,POST"
-            },
-            "body": json.dumps({"error": str(e)})
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"error": "Internal server error"})
         }
