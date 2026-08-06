@@ -21,3 +21,6 @@ terraform.tfvars
 # Lambda build artifacts
 lambda/*.zip
 lambda/package/
+
+# .continue configs
+.continue
