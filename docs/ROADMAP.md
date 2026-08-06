@@ -14,9 +14,9 @@
 
 - [x] Create Next.js frontend
 - [x] Connect frontend to API Gateway
-- [ ] Build injury extraction user interface
-- [ ] Add loading and error states
-- [ ] Display extracted injury results
+- [x] Build injury extraction user interface
+- [x] Add loading and error states
+- [x] Display extracted injury results
 
 ### Injury History
 

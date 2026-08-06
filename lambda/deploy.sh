@@ -7,8 +7,13 @@ echo "Installing dependencies..."
 rm -rf package
 mkdir package
 
-pip install -r requirements.txt -t package
-
+pip install \
+  -r requirements.txt \
+  -t package \
+  --platform manylinux2014_x86_64 \
+  --implementation cp \
+  --python-version 3.12 \
+  --only-binary=:all:
 
 echo "Creating Lambda package..."
 

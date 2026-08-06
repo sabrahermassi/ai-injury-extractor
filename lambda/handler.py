@@ -38,10 +38,12 @@ def lambda_handler(event, context):
 
     try:
         raw_body = event.get("body") if isinstance(event, dict) else None
+
         try:
             body = json.loads(raw_body) if isinstance(raw_body, str) else None
         except json.JSONDecodeError:
             body = None
+
         if (
             not isinstance(body, dict)
             or not isinstance(body.get("text"), str)
@@ -50,9 +52,10 @@ def lambda_handler(event, context):
         ):
             return {
                 "statusCode": 400,
-                "headers": CORS_HEADERS,,
+                "headers": CORS_HEADERS,
                 "body": json.dumps({"error": "Invalid request body"}),
             }
+
         injury_text = body["text"]
 
         print("Processing injury extraction request")
@@ -64,7 +67,10 @@ def lambda_handler(event, context):
             messages=[
                 {
                     "role": "system",
-                    "content": "You extract structured information from injury descriptions. Return JSON only."
+                    "content": (
+                        "You extract structured information from injury descriptions. "
+                        "Return JSON only."
+                    )
                 },
                 {
                     "role": "user",
@@ -80,9 +86,16 @@ Schema:
 {{
     "injury_name": "",
     "body_area": "",
+    "pain_level": null,
     "symptoms": [],
     "possible_causes": []
 }}
+
+Rules:
+- pain_level must be a number between 0 and 10 when the user mentions pain intensity.
+- If the user does not mention a pain level, return null.
+- symptoms must be an array of strings.
+- possible_causes must be an array of strings.
 
 Injury description:
 
@@ -90,7 +103,7 @@ Injury description:
 """
                 }
             ],
-            temperature=0
+            temperature=0,
             max_tokens=500
         )
 
@@ -100,12 +113,15 @@ Injury description:
             response.choices[0].message.content
         )
 
+
         required_fields = [
             "injury_name",
             "body_area",
+            "pain_level",
             "symptoms",
             "possible_causes"
         ]
+
 
         if not all(field in extracted_data for field in required_fields):
             return {
@@ -113,8 +129,9 @@ Injury description:
                 "headers": CORS_HEADERS,
                 "body": json.dumps({
                     "error": "Invalid AI response format"
-            })
-        }
+                })
+            }
+
 
         print("Extraction completed")
 
@@ -135,7 +152,7 @@ Injury description:
 
 
         # Save to DynamoDB
-        dynamodb_response = table.put_item(
+        table.put_item(
             Item=item
         )
 
@@ -157,5 +174,7 @@ Injury description:
         return {
             "statusCode": 500,
             "headers": CORS_HEADERS,
-            "body": json.dumps({"error": "Internal server error"})
+            "body": json.dumps({
+                "error": "Internal server error"
+            })
         }
