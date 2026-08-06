@@ -16,11 +16,13 @@ node_modules/
 # Terraform state files (contain sensitive data)
 *.tfstate
 *.tfstate.*
+
+# Terraform variables (may contain secrets)
 terraform.tfvars
 
 # Lambda build artifacts
 lambda/*.zip
 lambda/package/
 
-# .continue configs
+# Continue configs
 .continue
