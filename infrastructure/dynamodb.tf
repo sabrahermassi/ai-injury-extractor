@@ -16,7 +16,7 @@ resource "aws_dynamodb_table" "injury_entries" {
   }
 
   tags = {
-    Project = "ai-injury-extractor"
+    Project     = "ai-injury-extractor"
     Environment = "dev"
   }
 }

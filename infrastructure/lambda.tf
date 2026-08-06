@@ -13,6 +13,7 @@ resource "aws_lambda_function" "injury_extractor" {
   environment {
     variables = {
       GROQ_API_KEY = var.groq_api_key
+      DYNAMODB_TABLE = aws_dynamodb_table.injury_entries.name
     }
   }
 }
