@@ -20,7 +20,8 @@
 
 ### Injury History
 
-- [ ] Create API endpoint to retrieve injury history
+- [x] Add GET /injuries API endpoint
+- [x] Retrieve saved injury entries from DynamoDB
 - [ ] Build injury history dashboard
 - [ ] Display timeline of injury entries
 - [ ] Add injury entry details view
