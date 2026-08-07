@@ -12,6 +12,12 @@ resource "aws_api_gateway_resource" "extract" {
   path_part   = "extract"
 }
 
+resource "aws_api_gateway_resource" "injuries" {
+  rest_api_id = aws_api_gateway_rest_api.injury_api.id
+  parent_id   = aws_api_gateway_rest_api.injury_api.root_resource_id
+  path_part   = "injuries"
+}
+
 resource "aws_api_gateway_method" "extract_post" {
   rest_api_id = aws_api_gateway_rest_api.injury_api.id
   resource_id = aws_api_gateway_resource.extract.id
@@ -20,10 +26,31 @@ resource "aws_api_gateway_method" "extract_post" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method" "injuries_get" {
+  rest_api_id = aws_api_gateway_rest_api.injury_api.id
+  resource_id = aws_api_gateway_resource.injuries.id
+
+  http_method   = "GET"
+  # Development-only endpoint.
+  # Authentication and user-scoped access are handled by the consuming application.
+  authorization = "NONE"
+}
+
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.injury_api.id
   resource_id = aws_api_gateway_resource.extract.id
   http_method = aws_api_gateway_method.extract_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+
+  uri = aws_lambda_function.injury_extractor.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "injuries_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.injury_api.id
+  resource_id = aws_api_gateway_resource.injuries.id
+  http_method = aws_api_gateway_method.injuries_get.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -50,7 +77,11 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_method.extract_options.id,
       aws_api_gateway_integration.lambda.id,
       aws_api_gateway_integration.extract_options.id,
-      aws_api_gateway_integration_response.extract_options.id
+      aws_api_gateway_integration_response.extract_options.id,
+
+      aws_api_gateway_resource.injuries.id,
+      aws_api_gateway_method.injuries_get.id,
+      aws_api_gateway_integration.injuries_lambda.id
     ]))
   }
 
@@ -110,7 +141,7 @@ resource "aws_api_gateway_integration_response" "extract_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
-    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
     "method.response.header.Access-Control-Allow-Origin"  = "'http://localhost:3000'"
   }
 

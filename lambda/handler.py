@@ -3,17 +3,25 @@ import boto3
 import os
 from datetime import datetime, timezone
 import uuid
+from decimal import Decimal
 from groq import Groq
 
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "http://localhost:3000",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "OPTIONS,POST"
+    "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
 }
 
 
 MAX_TEXT_LENGTH = 5000
+
+
+def decimal_converter(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+
+    raise TypeError
 
 
 # DynamoDB setup
@@ -37,6 +45,38 @@ def lambda_handler(event, context):
     print("Lambda started")
 
     try:
+        http_method = event.get("httpMethod")
+
+        if http_method == "POST":
+            return extract_injury(event)
+
+        if http_method == "GET":
+            return get_injury_history()
+
+        return {
+            "statusCode": 405,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "error": "Method not allowed"
+            })
+        }
+
+    except Exception as e:
+        print("ERROR:", str(e))
+
+        return {
+            "statusCode": 500,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "error": "Internal server error"
+            })
+        }
+
+
+
+def extract_injury(event):
+
+    try:
         raw_body = event.get("body") if isinstance(event, dict) else None
 
         try:
@@ -53,15 +93,15 @@ def lambda_handler(event, context):
             return {
                 "statusCode": 400,
                 "headers": CORS_HEADERS,
-                "body": json.dumps({"error": "Invalid request body"}),
+                "body": json.dumps({
+                    "error": "Invalid request body"
+                }),
             }
 
         injury_text = body["text"]
 
         print("Processing injury extraction request")
 
-
-        # Call GROQ
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
@@ -107,8 +147,6 @@ Injury description:
             max_tokens=500
         )
 
-
-        # Convert GROQ response to dictionary
         extracted_data = json.loads(
             response.choices[0].message.content
         )
@@ -136,14 +174,11 @@ Injury description:
         print("Extraction completed")
 
 
-        # Prepare DynamoDB item
         item = {
             "userId": "test-user-001",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "entryId": str(uuid.uuid4()),
-
             "rawText": injury_text,
-
             "extractedData": extracted_data
         }
 
@@ -151,7 +186,6 @@ Injury description:
         print("Saving item to DynamoDB")
 
 
-        # Save to DynamoDB
         table.put_item(
             Item=item
         )
@@ -176,5 +210,36 @@ Injury description:
             "headers": CORS_HEADERS,
             "body": json.dumps({
                 "error": "Internal server error"
+            })
+        }
+
+
+
+def get_injury_history():
+
+    print("Fetching injury history")
+
+    try:
+        response = table.scan()
+
+        injuries = response.get("Items", [])
+
+        return {
+            "statusCode": 200,
+            "headers": CORS_HEADERS,
+            "body": json.dumps(
+                injuries,
+                default=decimal_converter
+            )
+        }
+
+    except Exception as e:
+        print("ERROR:", str(e))
+
+        return {
+            "statusCode": 500,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "error": "Failed to retrieve injury history"
             })
         }

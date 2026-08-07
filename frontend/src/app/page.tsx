@@ -1,5 +1,6 @@
 import { Stethoscope } from "lucide-react";
 import { InjuryExtractor } from "@/components/injury-extractor";
+import { InjuryHistory } from "@/components/injury-history";
 
 export default function Home() {
   return (
@@ -22,6 +23,8 @@ export default function Home() {
       </header>
 
       <InjuryExtractor />
+
+      <InjuryHistory />
     </main>
   );
 }

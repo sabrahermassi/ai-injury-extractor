@@ -1,15 +1,8 @@
 # AI Injury Extractor
 
-A serverless AI-powered application that transforms free-text injury descriptions into structured medical data using AWS Lambda, API Gateway, DynamoDB, Terraform, and Groq LLMs.
+A serverless AI-powered application that transforms free-text injury descriptions into structured injury data using AWS Lambda, API Gateway, DynamoDB, Terraform, Groq LLMs, and Next.js. This project demonstrates an end-to-end serverless AWS architecture.
 
-## Features
-
-- Extracts structured injury information from natural language
-- Serverless architecture built on AWS
-- REST API powered by API Gateway and Lambda
-- Stores extracted records in DynamoDB
-- Infrastructure managed with Terraform
-- Ready to integrate with a Next.js frontend
+The application accepts free-text injury descriptions, uses an LLM to extract structured information, stores the extracted data in DynamoDB, and exposes REST API endpoints for retrieving previous entries.
 
 ## Tech Stack
 
@@ -18,8 +11,29 @@ A serverless AI-powered application that transforms free-text injury description
 - Amazon API Gateway
 - Amazon DynamoDB
 - Terraform
-- Groq API (Llama 3.3)
+- Groq API (Llama 3.1)
 - GitHub Actions (coming soon)
+
+## Features
+
+- Extracts structured injury information from natural language
+- Serverless architecture built on AWS
+- REST API powered by API Gateway and Lambda
+- Stores extracted records in DynamoDB
+- Infrastructure managed with Terraform
+- Integrated with a Next.js frontend
+
+## Integration
+
+Although this project is fully functional as a standalone serverless application, it was designed so that the AI extraction component can also be integrated into a larger healthcare application.
+
+In that scenario:
+
+- User authentication would be handled by the host application.
+- The AI extraction service would receive authenticated requests.
+- Extracted injury data could be persisted in the host application's primary database (for example, PostgreSQL) instead of DynamoDB.
+
+DynamoDB is used in this repository to demonstrate a complete serverless AWS architecture and end-to-end data flow.
 
 ## Architecture
 
@@ -33,27 +47,33 @@ sequenceDiagram
 
   Client->>API Gateway: POST /extract with injury text
   API Gateway->>Injury Extractor Lambda: Proxy request
-  Injury Extractor Lambda->>Groq API: Structured extraction request
+  Injury Extractor Lambda->>Groq API: Extract structured injury data
   Groq API-->>Injury Extractor Lambda: Injury JSON
-  Injury Extractor Lambda->>InjuryEntries DynamoDB: Store injury item
+  Injury Extractor Lambda->>InjuryEntries DynamoDB: Store injury entry
   Injury Extractor Lambda-->>API Gateway: HTTP 200 response
   API Gateway-->>Client: Extraction result
+
+  Client->>API Gateway: GET /injuries
+  API Gateway->>Injury Extractor Lambda: Proxy request
+  Injury Extractor Lambda->>InjuryEntries DynamoDB: Retrieve injury entries
+  InjuryEntries DynamoDB-->>Injury Extractor Lambda: Injury history
+  Injury Extractor Lambda-->>API Gateway: HTTP 200 response
+  API Gateway-->>Client: Injury history list
 ```
 
-```
-Next.js
-    │
-    ▼
-API Gateway
-    │
-    ▼
-AWS Lambda
-    │
-    ▼
-Groq LLM
-    │
-    ▼
-DynamoDB
+```text
+Next.js Frontend
+        │
+        ▼
+   API Gateway
+        │
+        ▼
+    AWS Lambda
+        │
+   ┌────┴────┐
+   ▼         ▼
+Groq API   DynamoDB
+(AI)       (Storage)
 ```
 
 ## Install Lambda dependencies
@@ -71,16 +91,25 @@ pip install -r requirements.txt -t package
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
 ```
 
-## Test the API (Development only)
+## Test injury data extractor API (Development only)
 
 > This endpoint is currently unauthenticated and intended for development/testing.
-> Authentication, authorization, and rate limiting will be added before production deployment.
+> Authentication and authorization are handled by the consuming application and are not implemented in this standalone serverless demo.
 
 ```bash
 curl -X POST \
 https://YOUR_API_URL/dev/extract \
 -H "Content-Type: application/json" \
 -d '{"text":"I have had left hip pain for four years after gym training."}'
+```
+
+## Test injury history API (Development only)
+
+> This endpoint retrieves saved injury entries from DynamoDB.
+> Authentication is not implemented yet and the endpoint is intended for development/testing.
+
+```bash
+curl https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/injuries
 ```
 
 # Useful Commands
@@ -165,7 +194,9 @@ cat response.json
 
 ---
 
-## Scan DynamoDB table (development only)
+## Inspect DynamoDB table (development only)
+
+Scan all injury entries:
 
 ```bash
 aws dynamodb scan \
@@ -236,4 +267,9 @@ Verify the endpoint URL and deployment stage.
 
 ### API Gateway returns 404
 
-Confirm the `/extract` resource and `POST` method are deployed.
+Confirm the API Gateway resources and methods are deployed:
+
+- `/extract` with `POST`
+- `/injuries` with `GET`
+
+After changing Terraform resources, create a new deployment.
