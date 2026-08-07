@@ -23,6 +23,26 @@ The application accepts free-text injury descriptions, uses an LLM to extract st
 - Infrastructure managed with Terraform
 - Integrated with a Next.js frontend
 
+## Screenshots
+
+### Injury Description Input
+
+Users can describe their injury in natural language and submit it for AI extraction.
+
+![Injury description input](docs/screenshots/injury-description-input.png)
+
+### AI Extraction Result
+
+The LLM converts unstructured text into structured injury information.
+
+![AI extraction result](docs/screenshots/ai-extraction-result.png)
+
+### Injury History
+
+Previously extracted injuries can be retrieved from DynamoDB through the history API.
+
+![Injury history](docs/screenshots/injury-history-timeline.png)
+
 ## Integration
 
 Although this project is fully functional as a standalone serverless application, it was designed so that the AI extraction component can also be integrated into a larger healthcare application.
@@ -94,9 +114,8 @@ From the Lambda directory:
 ```bash
 cd lambda
 ./deploy.sh
-```
 
-````
+```
 
 ## Test injury data extractor API (Development only)
 
@@ -280,4 +299,7 @@ Confirm the API Gateway resources and methods are deployed:
 - `/injuries` with `GET`
 
 After changing Terraform resources, create a new deployment.
-````
+
+```
+
+```
