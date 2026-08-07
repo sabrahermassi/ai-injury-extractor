@@ -76,20 +76,25 @@ Groq API   DynamoDB
 (AI)       (Storage)
 ```
 
-## Install Lambda dependencies
+````md
+## Prerequisites
+
+Before deployment, ensure you have:
+
+- AWS CLI configured with valid credentials
+- Terraform installed
+- Python 3.12 installed
+- Groq API key configured as a Lambda environment variable
+
+## Deploy Lambda and Infrastructure
 
 From the Lambda directory:
 
 ```bash
 cd lambda
-pip install -r requirements.txt -t package
+./deploy.sh
 ```
-
-## Deploy Lambda
-
-```powershell
-Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
-```
+````
 
 ## Test injury data extractor API (Development only)
 
