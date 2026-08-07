@@ -18,7 +18,7 @@ A serverless AI-powered application that transforms free-text injury description
 - Amazon API Gateway
 - Amazon DynamoDB
 - Terraform
-- Groq API (Llama 3.3)
+- Groq API (Llama 3.1)
 - GitHub Actions (coming soon)
 
 ## Architecture
