@@ -76,7 +76,7 @@ Groq API   DynamoDB
 (AI)       (Storage)
 ```
 
-````md
+```md
 ## Prerequisites
 
 Before deployment, ensure you have:
@@ -85,6 +85,7 @@ Before deployment, ensure you have:
 - Terraform installed
 - Python 3.12 installed
 - Groq API key configured as a Lambda environment variable
+```
 
 ## Deploy Lambda and Infrastructure
 
@@ -94,6 +95,7 @@ From the Lambda directory:
 cd lambda
 ./deploy.sh
 ```
+
 ````
 
 ## Test injury data extractor API (Development only)
@@ -278,3 +280,4 @@ Confirm the API Gateway resources and methods are deployed:
 - `/injuries` with `GET`
 
 After changing Terraform resources, create a new deployment.
+````
