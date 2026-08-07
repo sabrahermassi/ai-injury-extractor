@@ -94,7 +94,6 @@ From the Lambda directory:
 ```bash
 cd lambda
 ./deploy.sh
-```
 
 ````
 
