@@ -10,6 +10,7 @@ export function InjuryHistory() {
   const [injuries, setInjuries] = useState<InjuryHistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   async function loadHistory() {
     try {
@@ -19,6 +20,7 @@ export function InjuryHistory() {
       const data = await getInjuryHistory();
 
       setInjuries(data);
+      setHasLoaded(true);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load injury history",
@@ -44,6 +46,12 @@ export function InjuryHistory() {
             <InjuryHistoryCard key={injury.entryId} injury={injury} />
           ))}
         </div>
+      )}
+
+      {hasLoaded && !loading && !error && injuries.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No saved injury entries.
+        </p>
       )}
     </div>
   );

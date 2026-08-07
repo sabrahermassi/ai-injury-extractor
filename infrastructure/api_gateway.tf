@@ -31,6 +31,8 @@ resource "aws_api_gateway_method" "injuries_get" {
   resource_id = aws_api_gateway_resource.injuries.id
 
   http_method   = "GET"
+  # Development-only endpoint.
+  # Authentication and user-scoped access are handled by the consuming application.
   authorization = "NONE"
 }
 

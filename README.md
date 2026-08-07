@@ -61,7 +61,7 @@ sequenceDiagram
   API Gateway-->>Client: Injury history list
 ```
 
-```
+```text
 Next.js Frontend
         │
         ▼
@@ -108,9 +108,9 @@ https://YOUR_API_URL/dev/extract \
 > This endpoint retrieves saved injury entries from DynamoDB.
 > Authentication is not implemented yet and the endpoint is intended for development/testing.
 
-````bash
+```bash
 curl https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/injuries
-
+```
 
 # Useful Commands
 
@@ -129,7 +129,7 @@ curl https://api.groq.com/openai/v1/chat/completions \
     }
   ]
 }'
-````
+```
 
 ---
 

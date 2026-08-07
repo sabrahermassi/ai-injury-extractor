@@ -181,7 +181,7 @@ The Lambda also supports retrieving previously stored injury entries.
 
 Request:
 
-```
+```text
 GET /injuries
 ```
 
@@ -217,7 +217,7 @@ The Lambda execution role requires the following permissions.
 
 Permissions:
 
-```
+```text
 dynamodb:PutItem
 dynamodb:Scan
 ```
@@ -225,7 +225,18 @@ dynamodb:Scan
 Purpose:
 
 - Store extracted injury entries
-- Retrieve injury history
+- Retrieve injury history during development
+
+Note:
+
+The current `/injuries` endpoint uses DynamoDB Scan for MVP demonstration purposes only. Since authentication and user identity management are handled by the consuming application, production implementations should replace Scan with Query operations using an authenticated userId.
+
+Before production use:
+
+- Add authentication and authorization
+- Extract user identity from JWT claims
+- Replace Scan with Query(userId)
+- Apply least-privilege IAM permissions
 
 ---
 
@@ -233,7 +244,7 @@ Purpose:
 
 Permissions:
 
-```
+```text
 logs:CreateLogGroup
 logs:CreateLogStream
 logs:PutLogEvents
@@ -263,7 +274,7 @@ The key is never stored directly in source code.
 
 The MVP uses a single Lambda function:
 
-```
+```text
 injury-extractor
 ```
 

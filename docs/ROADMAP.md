@@ -85,3 +85,8 @@
   - CloudWatch logging improvements
   - Error tracking
   - Usage metrics
+
+## Security Improvements
+
+- [ ] Replace DynamoDB Scan with Query based on authenticated userId
+- [ ] Add authentication before exposing injury history

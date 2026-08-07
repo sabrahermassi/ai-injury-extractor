@@ -33,7 +33,7 @@ DynamoDB uses a composite primary key:
 
 Example:
 
-```
+```text
 userId                 timestamp
 -------------------------------------------
 test-user-001          2026-08-01T10:00:00Z
@@ -109,7 +109,7 @@ Possible future additions:
 
 ## Current MVP Flow
 
-```
+```text
 User text input
         |
         v
