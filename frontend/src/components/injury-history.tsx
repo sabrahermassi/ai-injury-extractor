@@ -1,66 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getInjuryHistory } from "@/lib/api";
 import { InjuryHistoryEntry } from "@/lib/injury-schema";
+import { Button } from "@/components/ui/button";
+import { InjuryHistoryCard } from "./injury-history-card";
 
 export function InjuryHistory() {
   const [injuries, setInjuries] = useState<InjuryHistoryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchHistory() {
-      try {
-        const data = await getInjuryHistory();
-        setInjuries(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load injury history",
-        );
-      } finally {
-        setLoading(false);
-      }
+  async function loadHistory() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getInjuryHistory();
+
+      setInjuries(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load injury history",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    fetchHistory();
-  }, []);
-
-  if (loading) {
-    return <p>Loading injury history...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
-
-  if (injuries.length === 0) {
-    return <p>No injury history found.</p>;
   }
 
   return (
-    <div>
-      <h2>Injury History</h2>
+    <div className="flex flex-col gap-6">
+      <Button onClick={loadHistory} disabled={loading}>
+        {loading ? "Loading..." : "Get Injury History"}
+      </Button>
 
-      {injuries.map((injury) => (
-        <div key={injury.entryId}>
-          <h3>{injury.extractedData.injury_name}</h3>
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <p>Body area: {injury.extractedData.body_area}</p>
+      {injuries.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold">Injury History</h2>
 
-          <p>Pain level: {injury.extractedData.pain_level ?? "Not provided"}</p>
-
-          <p>Symptoms: {injury.extractedData.symptoms.join(", ")}</p>
-
-          <p>
-            Possible causes: {injury.extractedData.possible_causes.join(", ")}
-          </p>
-
-          <p>Date: {new Date(injury.timestamp).toLocaleDateString()}</p>
-
-          <hr />
+          {injuries.map((injury) => (
+            <InjuryHistoryCard key={injury.entryId} injury={injury} />
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

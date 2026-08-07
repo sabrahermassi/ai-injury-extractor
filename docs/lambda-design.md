@@ -4,17 +4,25 @@
 
 The AI Injury Extractor uses AWS Lambda as the serverless backend processing layer.
 
-The Lambda function is responsible for receiving user injury text, sending it to the Groq API for structured extraction, storing the result in DynamoDB, and returning a response to the client.
+The Lambda function receives injury descriptions from the frontend, uses the Groq API to extract structured injury information, stores entries in DynamoDB, and returns responses to the client.
 
 ---
 
-## Lambda Function
+## Integration Note
 
-### Function Name
+This repository focuses on the AI extraction service and serverless infrastructure.
 
-`extractInjuryEntry`
+Authentication, user management, and full injury tracking workflows are handled by the consuming application.
 
-### Purpose
+---
+
+# Lambda Function
+
+## Function Name
+
+`injury-extractor`
+
+## Purpose
 
 Convert unstructured injury journal text into structured injury data using an LLM.
 
@@ -26,17 +34,11 @@ Example output:
 
 ```json
 {
-  "name": "Knee injury",
-  "bodyArea": "knee",
-  "side": "left",
-  "cause": "squats",
-  "description": "Pain after training",
-  "status": "active",
-  "symptoms": {
-    "painLevel": 6,
-    "location": "knee",
-    "notes": "Pain during exercise"
-  }
+  "injury_name": "Knee injury",
+  "body_area": "left knee",
+  "pain_level": 6,
+  "symptoms": ["pain during exercise"],
+  "possible_causes": ["squats"]
 }
 ```
 
@@ -44,15 +46,15 @@ Example output:
 
 # High-Level Flow
 
-```
-User
+```text
+Frontend
  |
- | Injury description
+ | POST /extract
  ↓
 API Gateway
  |
  ↓
-Lambda (extractInjuryEntry)
+Lambda
  |
  |-- Validate input
  |
@@ -60,12 +62,26 @@ Lambda (extractInjuryEntry)
  |
  |-- Parse AI response
  |
- |-- Store data
+ |-- Store injury entry
+ ↓
+DynamoDB
+
+
+Frontend
+ |
+ | GET /injuries
+ ↓
+API Gateway
+ |
+ ↓
+Lambda
+ |
+ |-- Retrieve injury history
  ↓
 DynamoDB
  |
  ↓
-Return response
+Return injury history
 ```
 
 ---
@@ -93,6 +109,7 @@ Before processing:
 - Check that injury text exists
 - Check that the input is not empty
 - Validate request format
+- Enforce maximum input length
 
 Invalid requests return an error response.
 
@@ -100,7 +117,7 @@ Example:
 
 ```json
 {
-  "error": "Missing injury text"
+  "error": "Invalid request body"
 }
 ```
 
@@ -108,74 +125,107 @@ Example:
 
 ## 3. Call Groq API
 
-Lambda sends the user's text to Groq API with instructions to extract structured injury information.
+Lambda sends the injury description to Groq with instructions to extract structured information.
 
-The LLM is responsible for converting unstructured text into structured JSON.
+The LLM converts unstructured text into JSON.
 
 Required fields:
 
-- name
-- bodyArea
-- side
-- cause
-- description
-- status
-- symptoms
-
----
-
-## 4. Save Data to DynamoDB
-
-Lambda stores the extracted information together with the original user text.
+- `injury_name`
+- `body_area`
+- `pain_level`
+- `symptoms`
+- `possible_causes`
 
 Example:
 
 ```json
 {
-  "userId": "user123",
-  "timestamp": "2026-08-04T10:30:00Z",
-  "rawText": "I hurt my left knee...",
-  "injury": {},
-  "symptoms": {},
-  "createdAt": "2026-08-04T10:30:00Z"
+  "injury_name": "Knee injury",
+  "body_area": "left knee",
+  "pain_level": 6,
+  "symptoms": ["pain during exercise"],
+  "possible_causes": ["squats"]
 }
 ```
 
 ---
 
-## 5. Return Response
+## 4. Store Data in DynamoDB
 
-Lambda returns a success response to the frontend.
+Lambda stores the extracted injury information together with the original text.
 
-Example:
+Example DynamoDB item:
 
 ```json
 {
-  "message": "Entry extracted successfully",
-  "data": {
-    "bodyArea": "knee",
-    "status": "active"
+  "userId": "test-user-001",
+  "timestamp": "2026-08-04T10:30:00Z",
+  "entryId": "uuid",
+  "rawText": "I hurt my left knee...",
+  "extractedData": {
+    "injury_name": "Knee injury",
+    "body_area": "left knee",
+    "pain_level": 6,
+    "symptoms": ["pain during exercise"],
+    "possible_causes": ["squats"]
   }
 }
 ```
 
 ---
 
+## 5. Retrieve Injury History
+
+The Lambda also supports retrieving previously stored injury entries.
+
+Request:
+
+```
+GET /injuries
+```
+
+The function reads stored entries from DynamoDB and returns the injury history list.
+
+---
+
+## 6. Return Response
+
+For extraction requests, Lambda returns the structured injury data.
+
+Example:
+
+```json
+{
+  "injury_name": "Knee injury",
+  "body_area": "left knee",
+  "pain_level": 6,
+  "symptoms": [],
+  "possible_causes": []
+}
+```
+
+For history requests, Lambda returns saved injury entries.
+
+---
+
 # Required AWS Permissions
 
-The Lambda execution role will require:
+The Lambda execution role requires the following permissions.
 
 ## DynamoDB
 
-Permission:
+Permissions:
 
 ```
 dynamodb:PutItem
+dynamodb:Scan
 ```
 
 Purpose:
 
-Store extracted injury entries.
+- Store extracted injury entries
+- Retrieve injury history
 
 ---
 
@@ -197,7 +247,7 @@ Enable application logging and debugging.
 
 ## Groq API Access
 
-The Groq API key will be provided through environment variables.
+The Groq API key is provided through environment variables.
 
 Example:
 
@@ -205,7 +255,7 @@ Example:
 GROQ_API_KEY
 ```
 
-The key will not be stored in source code.
+The key is never stored directly in source code.
 
 ---
 
@@ -214,14 +264,16 @@ The key will not be stored in source code.
 The MVP uses a single Lambda function:
 
 ```
-extractInjuryEntry
+injury-extractor
 ```
 
 It handles:
 
-- Request processing
+- HTTP request processing
+- Input validation
 - AI extraction
-- Database storage
+- DynamoDB storage
+- Injury history retrieval
 - Response generation
 
 Future improvements could split responsibilities into separate functions for:
@@ -235,7 +287,7 @@ Future improvements could split responsibilities into separate functions for:
 
 # Current Architecture
 
-```
+```text
 Frontend
     |
     ↓
@@ -245,7 +297,8 @@ API Gateway
 AWS Lambda
     |
     ├── Groq API
+    |      (AI extraction)
     |
-    ↓
-DynamoDB
+    └── DynamoDB
+           (Storage + History)
 ```
