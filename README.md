@@ -126,6 +126,11 @@ runs `terraform apply` in `../infrastructure`. It requires AWS CLI
 credentials, Terraform, and a `groq_api_key` Terraform variable (e.g. via
 `TF_VAR_groq_api_key` or a gitignored `terraform.tfvars`).
 
+The allowed CORS origin is also a Terraform variable, `allowed_origin`
+(default `http://localhost:3000`) — set it (e.g. via `TF_VAR_allowed_origin`)
+to your deployed frontend's origin when deploying anywhere other than local
+dev.
+
 ## Testing
 
 There is currently no automated test suite (no Lambda unit tests, no API

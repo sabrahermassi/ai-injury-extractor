@@ -8,7 +8,7 @@ from groq import Groq
 
 
 CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "http://localhost:3000",
+    "Access-Control-Allow-Origin": os.environ["ALLOWED_ORIGIN"],
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
 }

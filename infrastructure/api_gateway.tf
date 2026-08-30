@@ -142,7 +142,7 @@ resource "aws_api_gateway_integration_response" "extract_options" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'http://localhost:3000'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin}'"
   }
 
   depends_on = [
