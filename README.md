@@ -131,6 +131,10 @@ The allowed CORS origin is also a Terraform variable, `allowed_origin`
 to your deployed frontend's origin when deploying anywhere other than local
 dev.
 
+The Groq model id is configurable via the `groq_model` Terraform variable
+(default `llama-3.1-8b-instant`, e.g. via `TF_VAR_groq_model`) so it can be
+swapped without a code change if the model is deprecated.
+
 ## Testing
 
 Automated tests exist for both the Lambda handler and frontend components:
