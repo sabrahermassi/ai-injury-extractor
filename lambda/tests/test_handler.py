@@ -185,9 +185,9 @@ class TestErrorBranches:
         assert result["statusCode"] == 500
         assert json.loads(result["body"]) == {"error": "Internal server error"}
 
-    def test_get_injury_history_returns_500_when_scan_raises(self, handler_module, monkeypatch):
+    def test_get_injury_history_returns_500_when_query_raises(self, handler_module, monkeypatch):
         monkeypatch.setattr(
-            handler_module.table, "scan",
+            handler_module.table, "query",
             MagicMock(side_effect=RuntimeError("dynamodb unavailable")),
         )
 
