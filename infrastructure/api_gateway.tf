@@ -78,6 +78,7 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_integration.lambda.id,
       aws_api_gateway_integration.extract_options.id,
       aws_api_gateway_integration_response.extract_options.id,
+      var.allowed_origin,
 
       aws_api_gateway_resource.injuries.id,
       aws_api_gateway_method.injuries_get.id,

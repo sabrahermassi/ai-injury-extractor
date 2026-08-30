@@ -198,6 +198,21 @@ class TestErrorBranches:
         assert result["statusCode"] == 502
         assert json.loads(result["body"]) == {"error": "Invalid AI response format"}
 
+    def test_extract_injury_returns_502_when_groq_content_is_none(self, handler_module, monkeypatch):
+        from types import SimpleNamespace
+
+        monkeypatch.setattr(
+            handler_module.client.chat.completions, "create",
+            MagicMock(return_value=SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=None))]
+            )),
+        )
+
+        result = handler_module.extract_injury(make_event({"text": "hurts"}))
+
+        assert result["statusCode"] == 502
+        assert json.loads(result["body"]) == {"error": "Invalid AI response format"}
+
     def test_extract_injury_returns_500_when_dynamodb_put_raises(self, handler_module, monkeypatch):
         monkeypatch.setattr(
             handler_module.client.chat.completions, "create",
