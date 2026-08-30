@@ -27,66 +27,8 @@
 
 ## Future Improvements
 
-## AI Model Reliability
+Tracked as GitHub issues (`security` / `bug` / `tech-debt` / `tests` labels), not duplicated here:
 
-- [ ] Review and update Groq model selection
-  - Replace deprecated models before retirement
-  - Move model configuration to environment variables instead of hardcoding
-  - Validate LLM responses against the expected JSON schema
-  - Handle model/API failures gracefully
-
----
-
-## Data & API Improvements
-
-- [ ] Improve DynamoDB record design
-  - Review partition key and sort key strategy
-  - Add stronger uniqueness guarantees
-  - Prevent duplicate entries from retries
-
-- [ ] Improve Lambda error handling
-  - Handle Groq API failures separately
-  - Return appropriate HTTP status codes
-  - Avoid exposing internal exceptions
-  - Add sanitized error messages for frontend handling
-
----
-
-## AI Extraction Improvements
-
-- [ ] Expand injury extraction schema
-  - Add additional fields:
-    - injury name
-    - body area
-    - side
-    - cause
-    - description
-    - status
-    - structured symptoms
-
-- [ ] Validate AI responses against the expected schema
-- [ ] Evaluate Groq structured outputs / JSON schema support
-
----
-
-## Developer Experience Improvements
-
-- [ ] Automate Lambda deployment workflow
-  - Automate building `function.zip`
-  - Simplify deployment scripts
-  - Ensure dependencies are packaged correctly
-
-- [ ] Add automated tests
-  - Lambda unit tests
-  - API integration tests
-  - Frontend component tests
-
-- [ ] Add monitoring and observability
-  - CloudWatch logging improvements
-  - Error tracking
-  - Usage metrics
-
-## Security Improvements
-
-- [ ] Replace DynamoDB Scan with Query based on authenticated userId
-- [ ] Add authentication before exposing injury history
+```
+gh issue list --repo sabrahermassi/ai-injury-extractor --state open --label security,bug,tech-debt,tests
+```

@@ -81,22 +81,6 @@ sequenceDiagram
   API Gateway-->>Client: Injury history list
 ```
 
-```text
-Next.js Frontend
-        │
-        ▼
-   API Gateway
-        │
-        ▼
-    AWS Lambda
-        │
-   ┌────┴────┐
-   ▼         ▼
-Groq API   DynamoDB
-(AI)       (Storage)
-```
-
-```md
 ## Prerequisites
 
 Before deployment, ensure you have:
@@ -105,7 +89,27 @@ Before deployment, ensure you have:
 - Terraform installed
 - Python 3.12 installed
 - Groq API key configured as a Lambda environment variable
+
+## Run the Frontend Locally
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+The frontend requires `NEXT_PUBLIC_API_URL` to be set to your deployed API
+Gateway invoke URL (no trailing slash, no `/extract` or `/injuries` suffix —
+the app appends those itself), for example in `frontend/.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev
+```
+
+There is currently no local/mocked backend — the frontend always calls a
+real deployed API Gateway + Lambda stack.
 
 ## Deploy Lambda and Infrastructure
 
@@ -117,6 +121,19 @@ cd lambda
 
 ```
 
+This installs Lambda dependencies into `package/`, zips `function.zip`, and
+runs `terraform apply` in `../infrastructure`. It requires AWS CLI
+credentials, Terraform, and a `groq_api_key` Terraform variable (e.g. via
+`TF_VAR_groq_api_key` or a gitignored `terraform.tfvars`).
+
+## Testing
+
+There is currently no automated test suite (no Lambda unit tests, no API
+integration tests, no frontend component tests) — see
+`docs/ROADMAP.md` for tracked plans to add one. Changes should be verified
+manually using the `curl` examples below and by running the frontend against
+a real deployed API.
+
 ## Test injury data extractor API (Development only)
 
 > This endpoint is currently unauthenticated and intended for development/testing.
@@ -124,7 +141,7 @@ cd lambda
 
 ```bash
 curl -X POST \
-https://YOUR_API_URL/dev/extract \
+https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/extract \
 -H "Content-Type: application/json" \
 -d '{"text":"I have had left hip pain for four years after gym training."}'
 ```
@@ -155,17 +172,6 @@ curl https://api.groq.com/openai/v1/chat/completions \
     }
   ]
 }'
-```
-
----
-
-## Test Lambda through API Gateway
-
-```bash
-curl -X POST \
-https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/extract \
--H "Content-Type: application/json" \
--d '{"text":"I have had left hip pain for 4 years after gym training."}'
 ```
 
 ---
@@ -241,28 +247,6 @@ Remove-Item function.zip -ErrorAction Ignore
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
 ```
 
----
-
-## Useful AWS CLI checks
-
-Current AWS identity
-
-```bash
-aws sts get-caller-identity
-```
-
-Current region
-
-```bash
-aws configure get region
-```
-
-List Lambda functions
-
-```bash
-aws lambda list-functions
-```
-
 ## Troubleshooting
 
 ### ModuleNotFoundError
@@ -299,7 +283,3 @@ Confirm the API Gateway resources and methods are deployed:
 - `/injuries` with `GET`
 
 After changing Terraform resources, create a new deployment.
-
-```
-
-```

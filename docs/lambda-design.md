@@ -127,51 +127,16 @@ Example:
 
 Lambda sends the injury description to Groq with instructions to extract structured information.
 
-The LLM converts unstructured text into JSON.
-
-Required fields:
-
-- `injury_name`
-- `body_area`
-- `pain_level`
-- `symptoms`
-- `possible_causes`
-
-Example:
-
-```json
-{
-  "injury_name": "Knee injury",
-  "body_area": "left knee",
-  "pain_level": 6,
-  "symptoms": ["pain during exercise"],
-  "possible_causes": ["squats"]
-}
-```
+The LLM converts unstructured text into JSON with these required fields: `injury_name`,
+`body_area`, `pain_level`, `symptoms`, `possible_causes` — same shape as the example in
+"Purpose" above.
 
 ---
 
 ## 4. Store Data in DynamoDB
 
-Lambda stores the extracted injury information together with the original text.
-
-Example DynamoDB item:
-
-```json
-{
-  "userId": "test-user-001",
-  "timestamp": "2026-08-04T10:30:00Z",
-  "entryId": "uuid",
-  "rawText": "I hurt my left knee...",
-  "extractedData": {
-    "injury_name": "Knee injury",
-    "body_area": "left knee",
-    "pain_level": 6,
-    "symptoms": ["pain during exercise"],
-    "possible_causes": ["squats"]
-  }
-}
-```
+Lambda stores the extracted injury information together with the original text. See
+`docs/dynamodb-design.md` for the full item shape.
 
 ---
 
@@ -191,21 +156,8 @@ The function reads stored entries from DynamoDB and returns the injury history l
 
 ## 6. Return Response
 
-For extraction requests, Lambda returns the structured injury data.
-
-Example:
-
-```json
-{
-  "injury_name": "Knee injury",
-  "body_area": "left knee",
-  "pain_level": 6,
-  "symptoms": [],
-  "possible_causes": []
-}
-```
-
-For history requests, Lambda returns saved injury entries.
+For extraction requests, Lambda returns the structured injury data (same shape as the example in
+"Purpose" above). For history requests, Lambda returns saved injury entries.
 
 ---
 
@@ -294,22 +246,4 @@ Future improvements could split responsibilities into separate functions for:
 - Analytics
 - Background jobs
 
----
-
-# Current Architecture
-
-```text
-Frontend
-    |
-    ↓
-API Gateway
-    |
-    ↓
-AWS Lambda
-    |
-    ├── Groq API
-    |      (AI extraction)
-    |
-    └── DynamoDB
-           (Storage + History)
-```
+See the README "Architecture" diagram for the current request flow.
