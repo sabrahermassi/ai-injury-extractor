@@ -100,8 +100,11 @@ rationale; `docs/ROADMAP.md` for known gaps and planned work.
 
 ## 8. Project Workflows
 
-Branching, review, and shipping procedures live in `.claude/skills/`.
-Currently available: `address-review` (triage CodeRabbit/PR feedback).
+Branching, review, and shipping procedures live in `.claude/skills/`. Currently available:
+`next` (pick up a GitHub issue), `self-review` (skeptical pre-commit review), `ship`
+(commit/push/PR), `address-review` (triage CodeRabbit/PR feedback), `after-next` (post-task doc
+staleness check), `docs-audit` (audit docs against code), `security-checkup` (review a security
+plan).
 Follow the relevant Skill when invoked.
 
 ## 9. Verification
