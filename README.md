@@ -107,6 +107,27 @@ Before deployment, ensure you have:
 - Groq API key configured as a Lambda environment variable
 ```
 
+## Run the Frontend Locally
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+The frontend requires `NEXT_PUBLIC_API_URL` to be set to your deployed API
+Gateway invoke URL (no trailing slash, no `/extract` or `/injuries` suffix —
+the app appends those itself), for example in `frontend/.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev
+```
+
+There is currently no local/mocked backend — the frontend always calls a
+real deployed API Gateway + Lambda stack.
+
 ## Deploy Lambda and Infrastructure
 
 From the Lambda directory:
@@ -116,6 +137,19 @@ cd lambda
 ./deploy.sh
 
 ```
+
+This installs Lambda dependencies into `package/`, zips `function.zip`, and
+runs `terraform apply` in `../infrastructure`. It requires AWS CLI
+credentials, Terraform, and a `groq_api_key` Terraform variable (e.g. via
+`TF_VAR_groq_api_key` or a gitignored `terraform.tfvars`).
+
+## Testing
+
+There is currently no automated test suite (no Lambda unit tests, no API
+integration tests, no frontend component tests) — see
+`docs/ROADMAP.md` for tracked plans to add one. Changes should be verified
+manually using the `curl` examples below and by running the frontend against
+a real deployed API.
 
 ## Test injury data extractor API (Development only)
 
