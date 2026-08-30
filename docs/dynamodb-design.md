@@ -109,21 +109,4 @@ Possible future additions:
 
 ## Current MVP Flow
 
-```text
-User text input
-        |
-        v
-API Gateway
-        |
-        v
-AWS Lambda
-        |
-        v
-Groq API
-        |
-        v
-Structured injury data
-        |
-        v
-DynamoDB InjuryEntries table
-```
+See the README "Architecture" diagram for the current request flow.

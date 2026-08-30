@@ -81,22 +81,6 @@ sequenceDiagram
   API Gateway-->>Client: Injury history list
 ```
 
-```text
-Next.js Frontend
-        │
-        ▼
-   API Gateway
-        │
-        ▼
-    AWS Lambda
-        │
-   ┌────┴────┐
-   ▼         ▼
-Groq API   DynamoDB
-(AI)       (Storage)
-```
-
-```md
 ## Prerequisites
 
 Before deployment, ensure you have:
@@ -105,7 +89,6 @@ Before deployment, ensure you have:
 - Terraform installed
 - Python 3.12 installed
 - Groq API key configured as a Lambda environment variable
-```
 
 ## Run the Frontend Locally
 
@@ -158,7 +141,7 @@ a real deployed API.
 
 ```bash
 curl -X POST \
-https://YOUR_API_URL/dev/extract \
+https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/extract \
 -H "Content-Type: application/json" \
 -d '{"text":"I have had left hip pain for four years after gym training."}'
 ```
@@ -189,17 +172,6 @@ curl https://api.groq.com/openai/v1/chat/completions \
     }
   ]
 }'
-```
-
----
-
-## Test Lambda through API Gateway
-
-```bash
-curl -X POST \
-https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev/extract \
--H "Content-Type: application/json" \
--d '{"text":"I have had left hip pain for 4 years after gym training."}'
 ```
 
 ---
@@ -275,28 +247,6 @@ Remove-Item function.zip -ErrorAction Ignore
 Compress-Archive -Path handler.py,package\* -DestinationPath function.zip
 ```
 
----
-
-## Useful AWS CLI checks
-
-Current AWS identity
-
-```bash
-aws sts get-caller-identity
-```
-
-Current region
-
-```bash
-aws configure get region
-```
-
-List Lambda functions
-
-```bash
-aws lambda list-functions
-```
-
 ## Troubleshooting
 
 ### ModuleNotFoundError
@@ -333,7 +283,3 @@ Confirm the API Gateway resources and methods are deployed:
 - `/injuries` with `GET`
 
 After changing Terraform resources, create a new deployment.
-
-```
-
-```
