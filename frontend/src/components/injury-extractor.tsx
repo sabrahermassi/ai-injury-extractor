@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { extractInjury } from "@/lib/api";
 import { ExtractionResult } from "./extraction-result";
+import type { InjuryExtraction } from "@/lib/injury-schema";
 
 const EXAMPLE = "My left knee hurts after squats. Pain is 7 out of 10.";
 
@@ -22,7 +23,7 @@ export function InjuryExtractor() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<InjuryExtraction | null>(null);
 
   async function analyze() {
     if (description.trim().length < 3 || loading) return;
@@ -86,7 +87,7 @@ export function InjuryExtractor() {
             />
 
             <p className="text-sm text-muted-foreground">
-              Example: "{EXAMPLE}" · Press{" "}
+              Example: &ldquo;{EXAMPLE}&rdquo; · Press{" "}
               <kbd className="rounded bg-muted px-1 font-mono text-[0.7rem]">
                 Ctrl / Cmd
               </kbd>{" "}
