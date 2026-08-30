@@ -34,9 +34,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
 
         Action = [
           "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:Query"
         ]
 
         Resource = aws_dynamodb_table.injury_entries.arn
