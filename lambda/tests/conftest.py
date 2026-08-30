@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 os.environ.setdefault("DYNAMODB_TABLE", "InjuryEntries")
 os.environ.setdefault("GROQ_API_KEY", "test-groq-key")
+os.environ.setdefault("ALLOWED_ORIGIN", "http://localhost:3000")
 os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
 
 

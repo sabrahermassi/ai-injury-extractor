@@ -126,13 +126,22 @@ runs `terraform apply` in `../infrastructure`. It requires AWS CLI
 credentials, Terraform, and a `groq_api_key` Terraform variable (e.g. via
 `TF_VAR_groq_api_key` or a gitignored `terraform.tfvars`).
 
+The allowed CORS origin is also a Terraform variable, `allowed_origin`
+(default `http://localhost:3000`) — set it (e.g. via `TF_VAR_allowed_origin`)
+to your deployed frontend's origin when deploying anywhere other than local
+dev.
+
 ## Testing
 
-There is currently no automated test suite (no Lambda unit tests, no API
-integration tests, no frontend component tests) — see
-`docs/ROADMAP.md` for tracked plans to add one. Changes should be verified
-manually using the `curl` examples below and by running the frontend against
-a real deployed API.
+Automated tests exist for both the Lambda handler and frontend components:
+
+- Backend: `cd lambda && pytest` (pytest + moto, mocks AWS/Groq)
+- Frontend: `cd frontend && npm run test` (vitest)
+
+CI runs both on every push/PR to `main` (see `.github/workflows/ci.yml`). There
+is no end-to-end/API integration test suite yet — changes touching request/
+response behavior should still be verified manually using the `curl` examples
+below and by running the frontend against a real deployed API.
 
 ## Test injury data extractor API (Development only)
 

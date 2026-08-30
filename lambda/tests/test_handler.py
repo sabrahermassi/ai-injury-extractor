@@ -170,6 +170,49 @@ class TestErrorBranches:
         assert result["statusCode"] == 500
         assert json.loads(result["body"]) == {"error": "Internal server error"}
 
+    def test_extract_injury_returns_502_when_groq_raises_groq_error(self, handler_module, monkeypatch):
+        from groq import APIConnectionError
+
+        monkeypatch.setattr(
+            handler_module.client.chat.completions, "create",
+            MagicMock(side_effect=APIConnectionError(request=MagicMock())),
+        )
+
+        result = handler_module.extract_injury(make_event({"text": "hurts"}))
+
+        assert result["statusCode"] == 502
+        assert json.loads(result["body"]) == {"error": "AI service unavailable"}
+
+    def test_extract_injury_returns_502_when_groq_content_not_json(self, handler_module, monkeypatch):
+        from types import SimpleNamespace
+
+        monkeypatch.setattr(
+            handler_module.client.chat.completions, "create",
+            MagicMock(return_value=SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="not json"))]
+            )),
+        )
+
+        result = handler_module.extract_injury(make_event({"text": "hurts"}))
+
+        assert result["statusCode"] == 502
+        assert json.loads(result["body"]) == {"error": "Invalid AI response format"}
+
+    def test_extract_injury_returns_502_when_groq_content_is_none(self, handler_module, monkeypatch):
+        from types import SimpleNamespace
+
+        monkeypatch.setattr(
+            handler_module.client.chat.completions, "create",
+            MagicMock(return_value=SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=None))]
+            )),
+        )
+
+        result = handler_module.extract_injury(make_event({"text": "hurts"}))
+
+        assert result["statusCode"] == 502
+        assert json.loads(result["body"]) == {"error": "Invalid AI response format"}
+
     def test_extract_injury_returns_500_when_dynamodb_put_raises(self, handler_module, monkeypatch):
         monkeypatch.setattr(
             handler_module.client.chat.completions, "create",
@@ -185,9 +228,29 @@ class TestErrorBranches:
         assert result["statusCode"] == 500
         assert json.loads(result["body"]) == {"error": "Internal server error"}
 
-    def test_get_injury_history_returns_500_when_scan_raises(self, handler_module, monkeypatch):
+    def test_extract_injury_returns_500_when_dynamodb_put_raises_client_error(self, handler_module, monkeypatch):
+        from botocore.exceptions import ClientError
+
         monkeypatch.setattr(
-            handler_module.table, "scan",
+            handler_module.client.chat.completions, "create",
+            MagicMock(return_value=make_groq_response(VALID_EXTRACTION)),
+        )
+        monkeypatch.setattr(
+            handler_module.table, "put_item",
+            MagicMock(side_effect=ClientError(
+                {"Error": {"Code": "ProvisionedThroughputExceededException", "Message": "boom"}},
+                "PutItem",
+            )),
+        )
+
+        result = handler_module.extract_injury(make_event({"text": "hurts"}))
+
+        assert result["statusCode"] == 500
+        assert json.loads(result["body"]) == {"error": "Failed to save injury data"}
+
+    def test_get_injury_history_returns_500_when_query_raises(self, handler_module, monkeypatch):
+        monkeypatch.setattr(
+            handler_module.table, "query",
             MagicMock(side_effect=RuntimeError("dynamodb unavailable")),
         )
 
