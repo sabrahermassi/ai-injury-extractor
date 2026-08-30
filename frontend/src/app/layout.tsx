@@ -45,8 +45,6 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <TooltipProvider>{children}</TooltipProvider>
-
-        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );
