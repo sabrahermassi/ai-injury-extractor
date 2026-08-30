@@ -1,155 +1,119 @@
 # CLAUDE.md
 
-Guidance for working in this repository.
+## 1. Project Overview
 
-## Project Purpose
+`ai-injury-extractor` is a serverless demo: free-text injury descriptions →
+structured JSON via an LLM → stored/retrieved from DynamoDB. Built to show
+an end-to-end serverless AWS pattern and to be embeddable as a component in
+a larger app (which would own auth + a relational DB — see README
+"Integration").
 
-AI Injury Extractor is a demo serverless application that turns a free-text
-injury description (e.g. "I hurt my left knee doing squats two weeks ago,
-pain is 6/10") into structured JSON (injury name, body area, pain level,
-symptoms, possible causes) using an LLM, and stores/retrieves those entries.
-It's explicitly built as a portfolio/demo piece showing an end-to-end
-serverless AWS stack, and is designed to later be embedded as a component
-inside a larger injury-tracking application (which would own auth and a
-relational DB).
+Priorities:
 
-## Architecture
+1. Correct extraction/storage of the fixed schema (`injury_name`,
+   `body_area`, `pain_level`, `symptoms`, `possible_causes`)
+2. Don't regress the documented dev-only security posture without flagging it
+3. Keep docs (`README.md`, `docs/*.md`) truthful to actual behavior
+
+## 2. Tech Stack
+
+- Frontend: Next.js 16 (App Router), React 19, TypeScript, Tailwind v4,
+  shadcn/ui on `radix-ui`
+- Backend: Python 3.12 on AWS Lambda (single function, no framework),
+  `groq` SDK (`llama-3.1-8b-instant`)
+- Infra: Terraform, API Gateway (REST, AWS_PROXY), DynamoDB (pay-per-request)
+
+Do not introduce a router/framework for the Lambda or split it into multiple
+functions unless explicitly required — see `docs/lambda-design.md` "MVP
+Design Decision" for why it's currently one function.
+
+## 3. Architecture
 
 ```
-Next.js frontend (frontend/)
-        │  fetch(NEXT_PUBLIC_API_URL + "/extract" | "/injuries")
-        ▼
-API Gateway (REGIONAL REST API, "dev" stage)   [infrastructure/api_gateway.tf]
-        │  AWS_PROXY integration
-        ▼
-Single AWS Lambda "injury-extractor"           [lambda/handler.py]
-        │  routes on event.httpMethod (POST → extract, GET → history)
-   ┌────┴────┐
-   ▼         ▼
-Groq API   DynamoDB table "InjuryEntries"
-(LLM,      (PK: userId, SK: timestamp)
-llama-3.1-8b-instant)
+Next.js frontend → API Gateway → Lambda (routes on event.httpMethod)
+                                    ├── Groq API (extraction)
+                                    └── DynamoDB "InjuryEntries" (PK userId, SK timestamp)
 ```
 
-All infra is defined in Terraform (`infrastructure/`). There is one Lambda
-function that handles both `/extract` (POST) and `/injuries` (GET) via a
-manual `httpMethod` switch — there is no framework/router in use.
+- Code is authoritative over docs; verify claims against `lambda/handler.py`
+  and `infrastructure/*.tf` before trusting a doc.
+- `userId` is hardcoded to `"test-user-001"` everywhere — no auth exists yet.
+- `/injuries` (GET) and `/extract` (POST) are both unauthenticated by design
+  for this dev/demo repo (see README "Integration"). Do not assume this is
+  safe for a real deployment with real user data.
 
-## Directory Structure
+See `docs/lambda-design.md` and `docs/dynamodb-design.md` for full design
+rationale; `docs/ROADMAP.md` for known gaps and planned work.
 
-- `frontend/` — Next.js 16 (App Router) + React 19 + Tailwind v4 + shadcn/radix-ui
-  components. `src/app/page.tsx` is the single page; `src/components/` holds
-  the injury-extractor form, the extraction result card, and the injury
-  history list/card. `src/lib/api.ts` is the only place that talks to the
-  backend; `src/lib/injury-schema.ts` defines the TS shapes (note: these are
-  NOT validated at runtime — the backend response is trusted as-is).
-- `lambda/` — Python 3.12 Lambda handler (`handler.py`), `requirements.txt`
-  (currently just `groq`), and `deploy.sh` (builds `function.zip` and runs
-  `terraform apply`). `venv/` and `package/` are local build artifacts, not
-  committed.
-- `infrastructure/` — Terraform for API Gateway, the Lambda function, the
-  DynamoDB table, and IAM. Single environment ("dev"), no remote state
-  backend configured (local `.tfstate`, gitignored).
-- `docs/` — design docs (`dynamodb-design.md`, `lambda-design.md`) and
-  `ROADMAP.md`, which tracks known future work. These docs are more
-  aspirational/explanatory than the README and are a good source of "why"
-  for current design choices (e.g. why Scan instead of Query, why a single
-  Lambda).
+## 4. Sources of Truth
 
-## Tech Stack
+- Implementation: `lambda/handler.py`, `frontend/src/`, `infrastructure/*.tf`
+- Lambda design/flow: `docs/lambda-design.md`
+- DynamoDB schema design: `docs/dynamodb-design.md`
+- Roadmap/known gaps: `docs/ROADMAP.md` + GitHub Issues
+- Local run / deploy / testing commands: `README.md`
 
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
-  components on top of `radix-ui`, `lucide-react` icons.
-- **Backend**: Python 3.12 on AWS Lambda, `groq` SDK for LLM calls
-  (`llama-3.1-8b-instant`), `boto3` (via the Lambda runtime) for DynamoDB.
-- **Infra**: Terraform (`hashicorp/aws` ~> 5.0), API Gateway REST API
-  (AWS_PROXY), DynamoDB (pay-per-request, point-in-time recovery on).
-- **AI**: Groq is used instead of e.g. OpenAI/Anthropic for extraction
-  latency/cost reasons typical of demo projects; prompt asks for raw JSON
-  matching a fixed schema, temperature 0.
+## 5. Coding Conventions
 
-## Running Locally
+- Don't silently swallow errors — `lambda/handler.py` currently catches
+  broad `Exception` per function and returns a generic 500; this is a known
+  gap (see issue tracking undifferentiated error handling), not a pattern
+  to extend further.
+- Validate external/LLM responses before trusting them — the current code
+  only checks that expected keys are present, not their types/ranges; don't
+  assume that's sufficient when touching this path.
+- Search for an existing implementation before creating new abstractions
+  (e.g. the small `Field`/`BadgeList` components are duplicated between
+  `extraction-result.tsx` and `injury-history-card.tsx` — reuse one rather
+  than adding a third copy).
+- Prefer simple solutions over new infrastructure — this is a small MVP.
+- Prefer targeted lookups over broad exploration: scope `Glob`/`Grep` to a
+  specific path (`lambda/`, `frontend/src/`, `infrastructure/`) rather than
+  scanning the whole repo, and skip `lambda/venv/` and `lambda/package/`
+  (vendored, not source).
+- Read a file at most once per session.
 
-### Frontend
+## 6. File and Component Placement
 
-```bash
-cd frontend
-npm install
-npm run dev   # http://localhost:3000
-```
+- Lambda handler logic → `lambda/handler.py` (single file, no submodules yet)
+- API client / fetch logic → `frontend/src/lib/api.ts`
+- Shared TS types for the extraction schema → `frontend/src/lib/injury-schema.ts`
+- UI primitives (shadcn) → `frontend/src/components/ui/`
+- Feature components → `frontend/src/components/`
+- Terraform, one file per AWS concern → `infrastructure/*.tf`
 
-Requires `NEXT_PUBLIC_API_URL` set (e.g. in `frontend/.env.local`) to the
-deployed API Gateway invoke URL (no trailing slash, no path suffix — the
-client appends `/extract` and `/injuries` itself). There is currently no
-local/mocked backend option — the frontend always calls a real deployed API.
+## 7. Safe-Change Rules
 
-### Backend / Infrastructure
+- Do not assume authentication or user isolation exists anywhere in this
+  repo — verify in code. There isn't any yet.
+- DynamoDB key/schema changes (`userId`/`timestamp` composite key) must
+  account for the existing item shape and any already-stored data.
+- CORS origin is hardcoded in **two** places that must stay in sync:
+  `lambda/handler.py` `CORS_HEADERS` and `infrastructure/api_gateway.tf`
+  (OPTIONS mock integration response).
+- Treat user-submitted injury text as untrusted input, not as trusted
+  instructions to the LLM — it's currently interpolated directly into the
+  Groq prompt with no delimiting/sanitization beyond a length check.
+- Flag major architectural changes (splitting the Lambda, adding auth,
+  changing the DynamoDB key strategy) before introducing them unless the
+  task explicitly requires it.
 
-There is no local Lambda emulation in this repo (no SAM/LocalStack setup).
-To exercise the backend you deploy it:
+## 8. Project Workflows
 
-```bash
-cd lambda
-./deploy.sh        # installs deps into package/, zips function.zip, then `terraform apply` in ../infrastructure
-```
+Branching, review, and shipping procedures live in `.claude/skills/`.
+Currently available: `address-review` (triage CodeRabbit/PR feedback).
+Follow the relevant Skill when invoked.
 
-Requires AWS CLI credentials, Terraform installed, and `TF_VAR_groq_api_key`
-(or a `terraform.tfvars`, gitignored) set for the `groq_api_key` Terraform
-variable. See root `README.md` for `curl` examples against the deployed
-`/extract` and `/injuries` endpoints, plus common `aws`/Terraform operational
-commands (tailing logs, updating env vars, etc.).
+## 9. Verification
 
-## Testing
+There is no automated test suite yet (see `docs/ROADMAP.md` and the "no
+tests" GitHub issue) — verify changes manually:
 
-**There is no test suite in this repository** — no Lambda unit tests, no API
-integration tests, no frontend component tests. This is a known, tracked gap
-(see `docs/ROADMAP.md` "Developer Experience Improvements"). Any change to
-`lambda/handler.py` or the frontend should be manually exercised via the
-`curl` examples in the README and by running the frontend against a real
-deployed API until a test suite exists.
+- Frontend: `cd frontend && npm run lint`, then `npm run dev` and exercise
+  the affected flow in the browser.
+- Backend: no lint/test tooling configured — read the changed logic
+  carefully, and exercise it with the `curl` examples in `README.md`
+  against a deployed stack.
 
-## Conventions
-
-- Lambda handler functions return the full API Gateway proxy response dict
-  (`statusCode`, `headers`, `body`) directly — every branch repeats
-  `CORS_HEADERS` and a JSON-encoded body; there is no shared response helper.
-- Error handling in `handler.py` is broad `except Exception` blocks per
-  function that log via `print(...)` and return a generic 500 — no
-  distinction between e.g. a Groq failure, a malformed LLM response, and a
-  DynamoDB failure.
-- Frontend API responses are trusted as-is; `src/lib/injury-schema.ts` types
-  are not enforced/validated at runtime (no zod/schema validation).
-- `userId` is currently hardcoded to `"test-user-001"` everywhere (no auth
-  yet) — this is intentional per the docs (auth is meant to be owned by a
-  future consuming application) but means `/injuries` currently returns
-  every stored entry to every caller.
-- Frontend components favor shadcn primitives in `src/components/ui/` with
-  small local composition components (`Field`, `BadgeList`) duplicated
-  between `extraction-result.tsx` and `injury-history-card.tsx` rather than
-  shared.
-
-## Known Constraints / Gotchas
-
-- `/injuries` (GET) and `/extract` (POST) are both unauthenticated by
-  design for this dev/demo repo — see the "Integration" section of the
-  README. Do not treat this as accidental, but also do not assume it's safe
-  to point this at a real deployment with real user data without adding auth
-  first.
-- CORS is hardcoded to `http://localhost:3000` in both `lambda/handler.py`
-  and `infrastructure/api_gateway.tf` (the OPTIONS mock integration
-  response) — a deployed frontend on any other origin will be blocked by
-  CORS until this is parameterized.
-- `get_injury_history()` uses an unpaginated `table.scan()` — for a table
-  beyond ~1MB of items this silently returns only a partial result set (no
-  `LastEvaluatedKey` handling), and results are not explicitly sorted by
-  timestamp.
-- The Groq model name (`llama-3.1-8b-instant`) is hardcoded in
-  `handler.py` rather than read from an environment variable, even though
-  `docs/ROADMAP.md` already flags this as needed (deprecated models get
-  retired by providers periodically).
-- There's no schema/type validation on the LLM's JSON output beyond
-  checking the five keys are present — a malformed `pain_level` (e.g. a
-  string, or out of 0–10 range) or non-array `symptoms`/`possible_causes`
-  will be stored and served as-is.
-- Terraform has no remote state backend configured — state is local-only
-  (gitignored), so it isn't shared across machines/collaborators.
+Do not invent commands or scripts that don't exist in `package.json` or
+this repo.
